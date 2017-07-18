@@ -32,14 +32,14 @@ void    drawhandstate(Mat & img, Joint & lefthand, Joint & righthand, IBody* myB
 		myMapper->MapCameraPointToColorSpace(righthand.Position, &r_point);
 		p_r.x = r_point.X;
 		p_r.y = r_point.Y;
-		cout << "p_l:" << p_l.x << "," << p_l.y << " ";
-		cout << "p_r:" << p_r.x << "," << p_r.y << endl;
+		//cout << "p_l:" << p_l.x << "," << p_l.y << " ";
+		//cout << "p_r:" << p_r.x << "," << p_r.y << endl;
 
 		//char* str1 = NULL, str2 = NULL;
-		CvFont font;
-		cvInitFont(&font, CV_FONT_HERSHEY_PLAIN, 1.5f, 1.5f, 0, 2, CV_AA);//设置显示的字体
-		cvPutText(&IplImage(img), "LeftHand", Point(p_l.x + 50, p_l.y - 50), &font, CV_RGB(255, 0, 0));//红色字体注释
-		cvPutText(&IplImage(img), "RightHand", Point(p_r.x + 50, p_r.y - 50), &font, CV_RGB(255, 0, 0));//红色字体注释
+		//CvFont font;
+		//cvInitFont(&font, CV_FONT_HERSHEY_PLAIN, 1.5f, 1.5f, 0, 2, CV_AA);//设置显示的字体
+		//cvPutText(&IplImage(img), "LeftHand", Point(p_l.x + 50, p_l.y - 50), &font, CV_RGB(255, 0, 0));//红色字体注释
+		//cvPutText(&IplImage(img), "RightHand", Point(p_r.x + 50, p_r.y - 50), &font, CV_RGB(255, 0, 0));//红色字体注释
 
 		HandState left;
 		myBodyArr->get_HandLeftState(&left);
