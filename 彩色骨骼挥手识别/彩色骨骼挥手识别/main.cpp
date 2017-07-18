@@ -1,6 +1,6 @@
 #include "global.h"
 
-bool IsSkeletonTrackedWell(Joint & shoulder, Joint & elbow, Joint & hand, ICoordinateMapper * myMapper);
+bool GestureDetection(Joint & shoulder, Joint & elbow, Joint & hand, ICoordinateMapper * myMapper);
 
 Point   p_s, p_e, p_h;
 int data[10][2] , j = 0;
@@ -65,7 +65,7 @@ int main(void)
 				{
 					DrawBody(copy, myJointArr, myMapper);
 					drawhandstate(copy, myJointArr[JointType_HandLeft], myJointArr[JointType_HandRight], myBodyArr[i], myMapper);
-					IsSkeletonTrackedWell(myJointArr[JointType_ShoulderRight], myJointArr[JointType_ElbowRight], myJointArr[JointType_HandRight], myMapper);
+					GestureDetection(myJointArr[JointType_ShoulderRight], myJointArr[JointType_ElbowRight], myJointArr[JointType_HandRight], myMapper);
 				}
 			}
 		}
@@ -92,7 +92,7 @@ int main(void)
 }
 
 // 判断骨骼追踪情况：包括骨骼追踪完好且手部位置在肘上面  
-bool IsSkeletonTrackedWell(Joint & shoulder, Joint & elbow, Joint & hand, ICoordinateMapper * myMapper)
+bool GestureDetection(Joint & shoulder, Joint & elbow, Joint & hand, ICoordinateMapper * myMapper)
 {
 	if (shoulder.TrackingState == TrackingState_Tracked && elbow.TrackingState == TrackingState_Tracked && hand.TrackingState == TrackingState_Tracked)
 	{
