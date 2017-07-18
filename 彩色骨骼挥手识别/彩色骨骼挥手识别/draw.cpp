@@ -1,6 +1,6 @@
 #include "draw.h"
 
-void    draw(Mat & img, Joint & r_1, Joint & r_2, ICoordinateMapper * myMapper)
+void    drawline(Mat & img, Joint & r_1, Joint & r_2, ICoordinateMapper * myMapper)
 {
 	//ÓÃÁ½¸ö¹Ø½ÚµãÀ´×öÏß¶ÎµÄÁ½¶Ë£¬²¢ÇÒ½øĞĞ×´Ì¬¹ıÂË
 	if (r_1.TrackingState == TrackingState_Tracked && r_2.TrackingState == TrackingState_Tracked)
@@ -36,6 +36,8 @@ void    drawhandstate(Mat & img, Joint & lefthand, Joint & righthand, IBody* myB
 		cout << "p_r:" << p_r.x << "," << p_r.y << endl;
 
 		//char* str1 = NULL, str2 = NULL;
+		CvFont font;
+		cvInitFont(&font, CV_FONT_HERSHEY_PLAIN, 1.5f, 1.5f, 0, 2, CV_AA);//ÉèÖÃÏÔÊ¾µÄ×ÖÌå
 		cvPutText(&IplImage(img), "LeftHand", Point(p_l.x + 50, p_l.y - 50), &font, CV_RGB(255, 0, 0));//ºìÉ«×ÖÌå×¢ÊÍ
 		cvPutText(&IplImage(img), "RightHand", Point(p_r.x + 50, p_r.y - 50), &font, CV_RGB(255, 0, 0));//ºìÉ«×ÖÌå×¢ÊÍ
 
@@ -66,4 +68,35 @@ void    drawhandstate(Mat & img, Joint & lefthand, Joint & righthand, IBody* myB
 			break;
 		}
 	}
+}
+
+void DrawBody(Mat & img, Joint *myJointArr, ICoordinateMapper * myMapper)
+{
+	drawline(img, myJointArr[JointType_Head], myJointArr[JointType_Neck], myMapper);						// Í·-¾±
+	drawline(img, myJointArr[JointType_Neck], myJointArr[JointType_SpineShoulder], myMapper);				// ¾±-¼¹Öù¼ç
+
+	drawline(img, myJointArr[JointType_SpineShoulder], myJointArr[JointType_ShoulderLeft], myMapper);		// ¼¹Öù¼ç-×ó¼ç°ò
+	drawline(img, myJointArr[JointType_SpineShoulder], myJointArr[JointType_SpineMid], myMapper);			// ¼¹Öù¼ç-¼¹ÖùÖĞ
+	drawline(img, myJointArr[JointType_SpineShoulder], myJointArr[JointType_ShoulderRight], myMapper);		// ¼¹Öù¼ç-ÓÒ¼ç°ò
+
+	drawline(img, myJointArr[JointType_ShoulderLeft], myJointArr[JointType_ElbowLeft], myMapper);			// ×ó¼ç°ò-×óÊÖÖâ
+	drawline(img, myJointArr[JointType_SpineMid], myJointArr[JointType_SpineBase], myMapper);				// ¼¹ÖùÖĞ-¼¹Öùµ×
+	drawline(img, myJointArr[JointType_ShoulderRight], myJointArr[JointType_ElbowRight], myMapper);		// ÓÒ¼ç°ò-ÓÒÊÖÖâ
+
+	drawline(img, myJointArr[JointType_ElbowLeft], myJointArr[JointType_WristLeft], myMapper);				// ×óÊÖÖâ-×óÊÖÍó
+	drawline(img, myJointArr[JointType_SpineBase], myJointArr[JointType_HipLeft], myMapper);				// ¼¹Öùµ×-×ó¿è²¿
+	drawline(img, myJointArr[JointType_SpineBase], myJointArr[JointType_HipRight], myMapper);				// ¼¹Öùµ×-ÓÒ¿è²¿
+	drawline(img, myJointArr[JointType_ElbowRight], myJointArr[JointType_WristRight], myMapper);			// ÓÒÊÖÖâ-ÓÒÊÖÍó
+
+	drawline(img, myJointArr[JointType_WristLeft], myJointArr[JointType_ThumbLeft], myMapper);				// ×óÊÖÍó-×óÄ´Ö¸
+	drawline(img, myJointArr[JointType_WristLeft], myJointArr[JointType_HandLeft], myMapper);				// ×óÊÖÍó-×óÊÖÕÆ
+	drawline(img, myJointArr[JointType_HipLeft], myJointArr[JointType_KneeLeft], myMapper);				// ×ó¿è²¿-×óÏ¥¸Ç
+	drawline(img, myJointArr[JointType_HipRight], myJointArr[JointType_KneeRight], myMapper);				// ÓÒ¿è²¿-ÓÒÏ¥¸Ç
+	drawline(img, myJointArr[JointType_WristRight], myJointArr[JointType_ThumbRight], myMapper);			// ÓÒÊÖÍó-ÓÒÄ´Ö¸
+	drawline(img, myJointArr[JointType_WristRight], myJointArr[JointType_HandRight], myMapper);			// ÓÒÊÖÍó-ÓÒÊÖÕÆ
+
+	drawline(img, myJointArr[JointType_HandLeft], myJointArr[JointType_HandTipLeft], myMapper);			// ×óÊÖÕÆ-ÊÖÖ¸¼â
+	drawline(img, myJointArr[JointType_KneeLeft], myJointArr[JointType_FootLeft], myMapper);				// ×óÏ¥¸Ç-×ó½Å
+	drawline(img, myJointArr[JointType_KneeRight], myJointArr[JointType_FootRight], myMapper);				// ÓÒÏ¥¸Ç-ÓÒ½Å
+	drawline(img, myJointArr[JointType_HandRight], myJointArr[JointType_HandTipRight], myMapper);			// ÓÒÊÖÕÆ-ÊÖÖ¸¼â
 }

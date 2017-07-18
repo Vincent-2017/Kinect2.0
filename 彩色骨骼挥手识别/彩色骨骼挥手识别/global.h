@@ -7,10 +7,10 @@
 #include <opencv2\highgui.hpp>
 #include <Kinect.h>	//KinectÍ·ÎÄ¼þ
 
+#include "draw.h"
+
 using   namespace   std;
 using   namespace   cv;
 
-void    draw(cv::Mat & img, Joint & r_1, Joint & r_2, ICoordinateMapper * myMapper);
-void    drawhandstate(cv::Mat & img, Joint & lefthand, Joint & righthand, IBody* myBodyArr, ICoordinateMapper * myMapper);
 
 #endif
