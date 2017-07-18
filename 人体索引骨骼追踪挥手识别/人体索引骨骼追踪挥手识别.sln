@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "人体索引骨骼追踪挥手识别", "人体索引骨骼追踪挥手识别\人体索引骨骼追踪挥手识别.vcxproj", "{A7A882CC-2AF8-4DDB-B78A-FE67C056AD92}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A7A882CC-2AF8-4DDB-B78A-FE67C056AD92}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A7A882CC-2AF8-4DDB-B78A-FE67C056AD92}.Debug|Win32.Build.0 = Debug|Win32
+		{A7A882CC-2AF8-4DDB-B78A-FE67C056AD92}.Release|Win32.ActiveCfg = Release|Win32
+		{A7A882CC-2AF8-4DDB-B78A-FE67C056AD92}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
