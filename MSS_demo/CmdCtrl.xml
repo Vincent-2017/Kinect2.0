@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<GRAMMAR LANGID="804">
+  <DEFINE>
+    <ID NAME="VID_SubName1" VAL="4001"/>
+    <ID NAME="VID_SubName2" VAL="4002"/>
+    <ID NAME="VID_SubName3" VAL="4003"/>
+    <ID NAME="VID_SubName4" VAL="4004"/>
+    <ID NAME="VID_SubName5" VAL="4005"/>
+    <ID NAME="VID_SubName6" VAL="4006"/>
+    <ID NAME="VID_SubName7" VAL="4007"/>
+    <ID NAME="VID_SubName8" VAL="4008"/>
+    <ID NAME="VID_SubName9" VAL="4009"/>
+    <ID NAME="VID_SubNameRule" VAL="3001"/>
+    <ID NAME="VID_TopLevelRule" VAL="3000"/>
+  </DEFINE>
+  <RULE ID="VID_TopLevelRule" TOPLEVEL="ACTIVE">
+    <O>
+      <L>
+        <P>我要</P>
+        <P>运行</P>
+        <P>执行</P>
+      </L>
+    </O>
+    <RULEREF REFID="VID_SubNameRule" />
+  </RULE>
+  <RULE ID="VID_SubNameRule" >
+    <L PROPID="VID_SubNameRule">
+      <P VAL="VID_SubName1">发短信</P>
+      <P VAL="VID_SubName2">是的</P>
+      <P VAL="VID_SubName3">好的</P>
+      <P VAL="VID_SubName4">不用</P>
+      <P VAL="VID_SubName5">李雷</P>
+      <P VAL="VID_SubName6">韩梅梅</P>
+      <P VAL="VID_SubName7">中文界面</P>
+      <P VAL="VID_SubName8">英文界面</P>
+      <P VAL="VID_SubName9">English</P>
+
+    </L>
+  </RULE>
+</GRAMMAR>
