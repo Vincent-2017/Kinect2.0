@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "单一深度图", "单一深度图\单一深度图.vcxproj", "{6C991AE1-E00E-4B00-ABF5-5D00C5D40302}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6C991AE1-E00E-4B00-ABF5-5D00C5D40302}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6C991AE1-E00E-4B00-ABF5-5D00C5D40302}.Debug|Win32.Build.0 = Debug|Win32
+		{6C991AE1-E00E-4B00-ABF5-5D00C5D40302}.Release|Win32.ActiveCfg = Release|Win32
+		{6C991AE1-E00E-4B00-ABF5-5D00C5D40302}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
