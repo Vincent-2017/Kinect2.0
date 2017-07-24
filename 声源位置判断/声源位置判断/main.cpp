@@ -43,18 +43,18 @@ int main()
 	printf("UID: %s\n", bbuid);
 
 	// 音频数据获取
-	IAudioSource* audios = nullptr;
+	IAudioSource* AudioSoure = nullptr;
 	UINT nAudioCount = 0;
-	hr = pKinect->get_AudioSource(&audios);
+	hr = pKinect->get_AudioSource(&AudioSoure);
 	if (FAILED(hr))
 	{
 		printf("Audio Source get failed!\n");
 		goto endclose;
 	}
-	IAudioBeam* audiobm = nullptr;
-	IAudioBeamList* audiobml = nullptr;
-	audios->get_AudioBeams(&audiobml);
-	audiobml->OpenAudioBeam(0, &audiobm); // 目前只支持第一个
+	IAudioBeam* AudioBeam = nullptr;
+	IAudioBeamList* AudioBeamList = nullptr;
+	AudioSoure->get_AudioBeams(&AudioBeamList);
+	AudioBeamList->OpenAudioBeam(0, &AudioBeam); // 目前只支持第一个
 
 	float fAngle = 0.0f;
 	float fAngleConfidence = 0.0f;
@@ -62,8 +62,8 @@ int main()
 	{
 		fAngle = 0.0f;
 		fAngleConfidence = 0.0f;
-		audiobm->get_BeamAngle(&fAngle); // 获取音频的角度，[ -0.872665f, 0.8726665f ]
-		audiobm->get_BeamAngleConfidence(&fAngleConfidence); // 获取音频的可信度（0 - 1）
+		AudioBeam->get_BeamAngle(&fAngle); // 获取音频的角度，[ -0.872665f, 0.8726665f ]
+		AudioBeam->get_BeamAngleConfidence(&fAngleConfidence); // 获取音频的可信度（0 - 1）
 		printf("Angle: %3.2f (%1.2f)\n", (fAngle / 3.1415926f)*180.0f, fAngleConfidence);
 		Sleep(200);
 	}
