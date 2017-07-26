@@ -89,7 +89,10 @@ int main(void)
 		myColorFrame->Release();
 
 		imshow("彩色骨骼挥手识别", copy);
-		if (waitKey(30) == VK_ESCAPE)	break;
+		if (waitKey(1) == 'q') 
+			imwrite("1.jpg", copy);
+		if (waitKey(30) == VK_ESCAPE)	
+			break;
 	}
 
 	// 与程序开始相反，后建立的先释放
