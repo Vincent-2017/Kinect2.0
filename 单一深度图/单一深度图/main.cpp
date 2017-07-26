@@ -1,6 +1,8 @@
 #include <Kinect.h>		//Kinect的头文件
 #include <iostream>
-#include <opencv2\highgui.hpp>			//opencv头文件
+#include <opencv2\imgproc.hpp>	//opencv头文件
+#include <opencv2\calib3d.hpp>
+#include <opencv2\highgui.hpp>
 
 using   namespace   std;
 using   namespace   cv;
