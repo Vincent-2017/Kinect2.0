@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "图形化进行声源定位", "图形化进行声源定位\图形化进行声源定位.vcxproj", "{CD445488-F75A-456B-BE5B-0665AAA701CD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CD445488-F75A-456B-BE5B-0665AAA701CD}.Debug|Win32.ActiveCfg = Debug|Win32
+		{CD445488-F75A-456B-BE5B-0665AAA701CD}.Debug|Win32.Build.0 = Debug|Win32
+		{CD445488-F75A-456B-BE5B-0665AAA701CD}.Release|Win32.ActiveCfg = Release|Win32
+		{CD445488-F75A-456B-BE5B-0665AAA701CD}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
