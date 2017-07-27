@@ -5,8 +5,11 @@
 #include <iostream>
 #include <Kinect.h>  
 #include <Kinect.Face.h>
+#include <Kinect.VisualGestureBuilder.h>
+
 #pragma comment ( lib, "kinect20.lib" )  
 #pragma comment ( lib, "Kinect20.face.lib" )  
+#pragma comment ( lib, "Kinect20.VisualGestureBuilder.lib" )  
 
 using namespace cv;
 using namespace std;
@@ -159,22 +162,44 @@ int main()
 		}
 		facesource[i]->OpenReader(&facereader[i]);
 	}
-	// 用来显示状态的文本
-	string property[FaceProperty_Count];
-	property[0] = "Happy";
-	property[1] = "Engaged";
-	property[2] = "WearingGlasses";
-	property[3] = "LeftEyeClosed";
-	property[4] = "RightEyeClosed";
-	property[5] = "MouthOpen";
-	property[6] = "MouthMoved";
-	property[7] = "LookingAway";
+
+	/********************************   姿势数据  ********************************/
+	IVisualGestureBuilderFrameSource* gesturesource[BODY_COUNT];
+	IVisualGestureBuilderFrameReader* gesturereader[BODY_COUNT];
+	for (int count = 0; count < BODY_COUNT; count++)
+	{
+		CreateVisualGestureBuilderFrameSource(mySensor, 0, &gesturesource[count]);
+		if (FAILED(hr))
+		{
+			std::cerr << "Error : CreateVisualGestureBuilderFrameSource" << std::endl;
+			return -1;
+		}
+		gesturesource[count]->OpenReader(&gesturereader[count]);
+	}
+	// 读取样本
+	IVisualGestureBuilderDatabase* gesturedatabase;
+	CreateVisualGestureBuilderDatabaseInstanceFromFile(L"wave.gba", &gesturedatabase);
+	// 样本库中的姿势和数目
+	UINT gesturecount = 0;
+	gesturedatabase->get_AvailableGesturesCount(&gesturecount);
+	IGesture* gesture;
+	hr = gesturedatabase->get_AvailableGestures(gesturecount, &gesture);
+	// 添加姿势到数据源中，并使能
+	if (SUCCEEDED(hr) && gesture != nullptr)
+	{
+		for (int count = 0; count < BODY_COUNT; count++)
+		{
+			gesturesource[count]->AddGesture(gesture);
+			gesturesource[count]->SetIsEnabled(gesture, true);
+		}
+	}
 
 	while (1)
 	{
 		/********************************   彩色帧  ********************************/
 		while (myColorReader->AcquireLatestFrame(&myColorFrame) != S_OK);
 		myColorFrame->CopyConvertedFrameDataToArray(colorHeight * colorWidth * 4, color.data, ColorImageFormat_Bgra); // 图像大小、目标地址、图像格式
+		colormuti = color.clone();
 		myColorFrame->Release();
 		//imshow("Color", color);
 
@@ -205,7 +230,7 @@ int main()
 			*bodyindexptr = bodyIndexArray[j]; ++bodyindexptr;
 		}
 		delete[] bodyIndexArray;
-		imshow("BodyIndex", bodyindex);
+		//imshow("BodyIndex", bodyindex);
 
 		/********************************   骨骼帧  ********************************/
 		while (myBodyReader->AcquireLatestFrame(&myBodyFrame) != S_OK);
@@ -221,8 +246,7 @@ int main()
 				Joint   myJointArr[JointType_Count];
 				//如果侦测到就把关节数据输入到数组并画图
 				if (myBodyArr[i]->GetJoints(JointType_Count, myJointArr) == S_OK)
-				{
-					colormuti = color.clone();
+				{	
 					// 绘制身体关节
 					DrawBody(colormuti, myJointArr, myMapper);
 					// 绘制手部状态
@@ -288,9 +312,11 @@ int main()
 							ExtractFaceRotationInDegrees(&faceRotation, &pitch, &yaw, &roll);
 							UINT64 trackingId = _UI64_MAX;
 							hr = faceframe->get_TrackingId(&trackingId);
-							result = "FaceID: " + to_string(trackingId) + "  Pitch, Yaw, Roll : " + to_string(pitch) + ", " + to_string(yaw) + ", " + to_string(roll);
+							result += "FaceID: " + to_string(trackingId) 
+								+ "  Pitch, Yaw, Roll : " + to_string(pitch) + ", " + to_string(yaw) + ", " + to_string(roll) 
+								+ " Nose(" + to_string(int(facepoint[2].X)) + ", " + to_string(int(facepoint[2].Y)) + ")";
 						}
-						putText(colormuti, result, Point(0, 30), FONT_HERSHEY_COMPLEX, 1.0f, Scalar(255, 255, 126, 255), 2, CV_AA);
+						putText(colormuti, result, Point(0, 40*(i+1)), FONT_HERSHEY_COMPLEX, 1.0f, Scalar(255, 255, 126, 255), 2, CV_AA);
 					}
 					SafeRelease(faceresult);
 				}
@@ -373,14 +399,6 @@ void    drawhandstate(Mat & img, Joint & lefthand, Joint & righthand, IBody* myB
 		myMapper->MapCameraPointToColorSpace(righthand.Position, &r_point);
 		p_r.x = r_point.X;
 		p_r.y = r_point.Y;
-		//cout << "p_l:" << p_l.x << "," << p_l.y << " ";
-		//cout << "p_r:" << p_r.x << "," << p_r.y << endl;
-
-		//char* str1 = NULL, str2 = NULL;
-		//CvFont font;
-		//cvInitFont(&font, CV_FONT_HERSHEY_PLAIN, 1.5f, 1.5f, 0, 2, CV_AA);//设置显示的字体
-		//cvPutText(&IplImage(img), "LeftHand", Point(p_l.x + 50, p_l.y - 50), &font, CV_RGB(255, 0, 0));//红色字体注释
-		//cvPutText(&IplImage(img), "RightHand", Point(p_r.x + 50, p_r.y - 50), &font, CV_RGB(255, 0, 0));//红色字体注释
 
 		HandState left;
 		myBodyArr->get_HandLeftState(&left);
@@ -480,8 +498,8 @@ bool GestureDetection(Joint & elbow, Joint & hand, ICoordinateMapper * myMapper)
 			}
 			elbow_range = elbow_MAX - elbow_MIN;
 			hand_range = hand_MAX - hand_MIN;
-			cout << "R_e:" << p_e.x << "," << p_e.y << "  手肘运动范围：" << elbow_range << endl;
-			cout << "R_h:" << p_h.x << "," << p_h.y << "  手掌运动范围：" << hand_range << endl;
+			//cout << "R_e:" << p_e.x << "," << p_e.y << "  手肘运动范围：" << elbow_range << endl;
+			//cout << "R_h:" << p_h.x << "," << p_h.y << "  手掌运动范围：" << hand_range << endl;
 			// 手肘、手掌运动阈值判定
 			if (hand_range >= 250 && elbow_range <= 100)
 			{
