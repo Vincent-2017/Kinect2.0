@@ -232,10 +232,10 @@ int main()
 				}
 				UINT64 trackingId = _UI64_MAX;
 				hr = myBodyArr[i]->get_TrackingId(&trackingId);
-				if (SUCCEEDED(hr)) 
+				if (SUCCEEDED(hr))
 				{
 					facesource[i]->put_TrackingId(trackingId);
-					cout << "追踪的人脸ID: " << trackingId << endl;
+					//cout << "追踪的人脸ID: " << trackingId << endl;
 				}
 			}
 		}
@@ -278,7 +278,7 @@ int main()
 						}
 
 						// 四元数 重点来了
-						vector<string> result;
+						string result;
 						Vector4 faceRotation;
 						hr = faceresult->get_FaceRotationQuaternion(&faceRotation);
 						if (SUCCEEDED(hr))
@@ -286,46 +286,11 @@ int main()
 							// 把四元数分解成三个方向的位置信息
 							int pitch, yaw, roll;
 							ExtractFaceRotationInDegrees(&faceRotation, &pitch, &yaw, &roll);
-							result.push_back("Pitch, Yaw, Roll : " + std::to_string(pitch) + ", " + std::to_string(yaw) + ", " + std::to_string(roll));
+							UINT64 trackingId = _UI64_MAX;
+							hr = faceframe->get_TrackingId(&trackingId);
+							result = "FaceID: " + to_string(trackingId) + "  Pitch, Yaw, Roll : " + to_string(pitch) + ", " + to_string(yaw) + ", " + to_string(roll);
 						}
-
-						// 面部各种信息
-						DetectionResult faceProperty[FaceProperty::FaceProperty_Count];
-						hr = faceresult->GetFaceProperties(FaceProperty::FaceProperty_Count, faceProperty);
-						if (SUCCEEDED(hr))
-						{
-							for (int count = 0; count < FaceProperty::FaceProperty_Count; count++)
-							{
-								switch (faceProperty[count])
-								{
-								case DetectionResult::DetectionResult_Unknown:
-									result.push_back(property[count] + " : Unknown");
-									break;
-								case DetectionResult::DetectionResult_Yes:
-									result.push_back(property[count] + " : Yes");
-									break;
-								case DetectionResult::DetectionResult_No:
-									result.push_back(property[count] + " : No");
-									break;
-								case DetectionResult::DetectionResult_Maybe:
-									result.push_back(property[count] + " : Mayby");
-									break;
-								default:
-									break;
-								}
-							}
-						}
-
-						if (box.Left && box.Bottom)
-						{
-							int offset = 30;
-							// 显示字符串
-							for (int i = 0; i < 8; i++, offset += 30)
-							{
-								putText(colormuti, result[i], cv::Point(box.Left, box.Bottom + offset), FONT_HERSHEY_COMPLEX, 1.0f, Scalar(0, 0, 255, 255), 2, CV_AA);
-							}
-						}
-
+						putText(colormuti, result, Point(0, 30), FONT_HERSHEY_COMPLEX, 1.0f, Scalar(255, 255, 126, 255), 2, CV_AA);
 					}
 					SafeRelease(faceresult);
 				}
@@ -343,7 +308,7 @@ int main()
 		}
 	}
 
-	for (int i = 0; i < BODY_COUNT; i++) 
+	for (int i = 0; i < BODY_COUNT; i++)
 	{
 		SafeRelease(facesource[i]);
 		SafeRelease(facereader[i]);
