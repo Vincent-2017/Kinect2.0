@@ -1,8 +1,9 @@
+#include <iostream>
 #include "opencv2/core.hpp"
 #include "opencv2/imgproc.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/videoio.hpp"
-#include <iostream>
+
 #include <Kinect.h>  
 #include <Kinect.Face.h>
 #include <Kinect.VisualGestureBuilder.h>
@@ -11,13 +12,17 @@
 #pragma comment ( lib, "Kinect20.face.lib" )  
 #pragma comment ( lib, "Kinect20.VisualGestureBuilder.lib" )  
 
+#define USEColorSpace 1
+#define USEDepthSpace 2
+
 using namespace cv;
 using namespace std;
 
-void drawline(cv::Mat & img, Joint & r_1, Joint & r_2, ICoordinateMapper * myMapper);
-void drawhandstate(cv::Mat & img, Joint & lefthand, Joint & righthand, IBody* myBodyArr, ICoordinateMapper * myMapper);
-void DrawBody(cv::Mat & img, Joint *myJointArr, ICoordinateMapper * myMapper);
-bool GestureDetection(Joint & elbow, Joint & hand, ICoordinateMapper * myMapper);
+Point MapCameraPointToSomeSpace(ICoordinateMapper * myMapper, Joint & joint, int SpaceFlag);
+void drawline(cv::Mat & img, Joint & r_1, Joint & r_2, ICoordinateMapper * myMapper, int SpaceFlag);
+void drawhandstate(cv::Mat & img, Joint & lefthand, Joint & righthand, IBody* myBodyArr, ICoordinateMapper * myMapper, int SpaceFlag);
+void DrawBody(cv::Mat & img, Joint *myJointArr, ICoordinateMapper * myMapper, int SpaceFlag);
+bool WaveGestureDetection(Joint & elbow, Joint & hand, ICoordinateMapper * myMapper);
 
 template<class Interface>
 inline void SafeRelease(Interface *& pInterfaceToRelease)
@@ -36,15 +41,22 @@ inline void ExtractFaceRotationInDegrees(const Vector4* pQuaternion, int* pPitch
 	double y = pQuaternion->y;
 	double z = pQuaternion->z;
 	double w = pQuaternion->w;
-
 	// 弧度制换成角度制
 	*pPitch = static_cast<int>(std::atan2(2 * (y * z + w * x), w * w - x * x - y * y + z * z) / 3.14159265358979 * 180.0f);
 	*pYaw = static_cast<int>(std::asin(2 * (w * y - x * z)) / 3.14159265358979 * 180.0f);
 	*pRoll = static_cast<int>(std::atan2(2 * (x * y + w * z), w * w + x * x - y * y - z * z) / 3.14159265358979 * 180.0f);
 }
-
+//获得某点像素值  
+int get_pixel(Mat & img, Point pt) {
+	int width = img.cols; //图片宽度  
+	int height = img.rows; //图片宽度t;//图片高度  
+	uchar* ptr = (uchar*)img.data + pt.y * width; //获得灰度值数据指针  
+	int intensity = ptr[pt.x];
+	return intensity;
+}
 int data[10][2];
 Point lefthandpoint, righthandpoint;
+int leftdepth,  rightdepth;
 
 int main()
 {
@@ -94,6 +106,8 @@ int main()
 	cout << "深度图像大小：" << depthWidth << " * " << depthHeight << " 数据格式：CV_16UC1" << endl;
 	IDepthFrame * myDepthFrame = nullptr;
 	Mat depth(depthHeight, depthWidth, CV_16UC1);    //建立图像矩阵
+	Mat showdepth(depthHeight, depthWidth, CV_8UC1);
+	Mat depthmuti(depthHeight, depthWidth, CV_8UC1);
 
 	/********************************   红外数据  ********************************/
 	IInfraredFrameSource * myInfraredSource = nullptr;
@@ -128,6 +142,7 @@ int main()
 	cout << "人物图像大小：" << bodyindexWidth << " * " << bodyindexHeight << " 数据格式：CV_8UC3" << endl;
 	IBodyIndexFrame  * myBodyIndexFrame = nullptr;
 	Mat bodyindex(bodyindexHeight, bodyindexWidth, CV_8UC3);
+	Mat bodyindexmuti(bodyindexHeight, bodyindexWidth, CV_8UC3);
 
 	/********************************   骨骼数据  ********************************/
 	IBodyFrameSource    * myBodySource = nullptr;
@@ -208,8 +223,9 @@ int main()
 		while (myDepthReader->AcquireLatestFrame(&myDepthFrame) != S_OK);
 		myDepthFrame->CopyFrameDataToArray(depthHeight * depthWidth, (UINT16 *)depth.data); //先把数据存入16位的图像矩阵中
 		myDepthFrame->Release();
-		Mat showdepth(depthHeight, depthWidth, CV_8UC1);
 		depth.convertTo(showdepth, CV_8UC1, 255.0 / 4500);   //再把16位转换为8位
+		//cout << get_pixel(showdepth, Point(200, 200)) << endl;
+		depthmuti = showdepth.clone();
 		//imshow("Depth", showdepth);
 
 		/********************************   红外帧  ********************************/
@@ -231,6 +247,7 @@ int main()
 			*bodyindexptr = bodyIndexArray[j]; ++bodyindexptr;
 		}
 		delete[] bodyIndexArray;
+		bodyindexmuti = bodyindex.clone();
 		//imshow("BodyIndex", bodyindex);
 
 		/********************************   骨骼帧  ********************************/
@@ -247,21 +264,30 @@ int main()
 				Joint   myJointArr[JointType_Count];
 				//如果侦测到就把关节数据输入到数组并画图
 				if (myBodyArr[i]->GetJoints(JointType_Count, myJointArr) == S_OK)
-				{	
-					// 绘制身体关节
-					DrawBody(colormuti, myJointArr, myMapper);
-					// 绘制手部状态
-					drawhandstate(colormuti, myJointArr[JointType_HandLeft], myJointArr[JointType_HandRight], myBodyArr[i], myMapper);
-					// 挥手检测
-					GestureDetection(myJointArr[JointType_ElbowRight], myJointArr[JointType_HandRight], myMapper);
+				{
+					DrawBody(colormuti, myJointArr, myMapper, USEColorSpace);
+					drawhandstate(colormuti, myJointArr[JointType_HandLeft], myJointArr[JointType_HandRight], myBodyArr[i], myMapper, USEColorSpace);
+					WaveGestureDetection(myJointArr[JointType_ElbowRight], myJointArr[JointType_HandRight], myMapper);
+
+					DrawBody(bodyindexmuti, myJointArr, myMapper, USEDepthSpace);
+					drawhandstate(bodyindexmuti, myJointArr[JointType_HandLeft], myJointArr[JointType_HandRight], myBodyArr[i], myMapper, USEDepthSpace);
+				
+					DrawBody(depthmuti, myJointArr, myMapper, USEDepthSpace);
+					drawhandstate(depthmuti, myJointArr[JointType_HandLeft], myJointArr[JointType_HandRight], myBodyArr[i], myMapper, USEDepthSpace);
+					lefthandpoint = MapCameraPointToSomeSpace(myMapper, myJointArr[JointType_HandLeft],  USEDepthSpace);
+					righthandpoint = MapCameraPointToSomeSpace(myMapper, myJointArr[JointType_HandRight], USEDepthSpace);
+					leftdepth = get_pixel(showdepth, lefthandpoint);
+					rightdepth = get_pixel(showdepth, righthandpoint);
+					//cout << leftdepth << "  " << rightdepth << endl;
 
 				}
+				// 把骨骼ID赋值给面部ID
 				UINT64 trackingId = _UI64_MAX;
 				hr = myBodyArr[i]->get_TrackingId(&trackingId);
+				//cout << "追踪的骨骼ID: " << trackingId << endl;
 				if (SUCCEEDED(hr))
 				{
 					facesource[i]->put_TrackingId(trackingId);
-					//cout << "追踪的人脸ID: " << trackingId << endl;
 				}
 			}
 		}
@@ -283,6 +309,9 @@ int main()
 				if (SUCCEEDED(hr) && tracked)
 				{
 					IFaceFrameResult *faceresult = nullptr;
+					UINT64 trackingID = NULL;
+					faceframe->get_TrackingId(&trackingID);
+					//cout << "追踪的人脸ID: " << trackingID << endl;
 					hr = faceframe->get_FaceFrameResult(&faceresult);
 					if (SUCCEEDED(hr))
 					{
@@ -314,13 +343,13 @@ int main()
 							ExtractFaceRotationInDegrees(&faceRotation, &pitch, &yaw, &roll);
 							UINT64 trackingId = _UI64_MAX;
 							hr = faceframe->get_TrackingId(&trackingId);
-							result += "FaceID: " + to_string(trackingId) 
-								+ "  Pitch, Yaw, Roll : " + to_string(pitch) + ", " + to_string(yaw) + ", " + to_string(roll) 
+							result += "FaceID: " + to_string(trackingId)
+								+ "  Pitch, Yaw, Roll : " + to_string(pitch) + ", " + to_string(yaw) + ", " + to_string(roll)
 								+ "  Nose(" + to_string(int(facepoint[2].X)) + ", " + to_string(int(facepoint[2].Y)) + ")"
-								+ "  Left(" + to_string(int(lefthandpoint.x)) + ", " + to_string(int(lefthandpoint.y)) + ")"
-								+ "  Right(" + to_string(int(righthandpoint.x)) + ", " + to_string(int(righthandpoint.y)) + ")";
+								+ "  Left(" + to_string(int(lefthandpoint.x)) + ", " + to_string(int(lefthandpoint.y)) +", " + to_string(leftdepth) + ")"
+								+ "  Right(" + to_string(int(righthandpoint.x)) + ", " + to_string(int(righthandpoint.y)) + ", " + to_string(rightdepth) + ")";
 						}
-						putText(colormuti, result, Point(0, 40*(i+1)), FONT_HERSHEY_COMPLEX, 1.0f, Scalar(255, 255, 126, 255), 2, CV_AA);
+						putText(colormuti, result, Point(0, 40 * (i + 1)), FONT_HERSHEY_COMPLEX, 1.0f, Scalar(255, 255, 126, 255), 2, CV_AA);
 					}
 					SafeRelease(faceresult);
 				}
@@ -328,9 +357,13 @@ int main()
 			SafeRelease(faceframe);
 		}
 
-		Mat faceimg;
-		cv::resize(colormuti, faceimg, cv::Size(), 0.5, 0.5);
-		cv::imshow("Face", faceimg);
+		Mat show;
+		cv::resize(colormuti, show, cv::Size(), 0.5, 0.5);
+		cv::imshow("ColorMuti", show);
+
+		imshow("BodyindexMuti", bodyindexmuti);
+
+		imshow("DepthMuti", depthmuti);
 
 		if (cv::waitKey(34) == VK_ESCAPE)
 		{
@@ -371,117 +404,122 @@ int main()
 	cv::destroyAllWindows();
 }
 
-void    drawline(Mat & img, Joint & r_1, Joint & r_2, ICoordinateMapper * myMapper)
+// 将关节点映射到彩色或者深度图像
+// USEUSEColorSpace USEDepthSpace
+Point MapCameraPointToSomeSpace(ICoordinateMapper * myMapper, Joint & joint, int SpaceFlag)
 {
-	//用两个关节点来做线段的两端，并且进行状态过滤
-	if (r_1.TrackingState == TrackingState_Tracked && r_2.TrackingState == TrackingState_Tracked)
+	Point   p;
+	if (SpaceFlag == USEColorSpace)
 	{
-		ColorSpacePoint t_point;    //要把关节点用的摄像机坐标下的点转换成彩色空间的点
-		Point   p_1, p_2;
-		myMapper->MapCameraPointToColorSpace(r_1.Position, &t_point);
-		p_1.x = t_point.X;
-		p_1.y = t_point.Y;
-		myMapper->MapCameraPointToColorSpace(r_2.Position, &t_point);
-		p_2.x = t_point.X;
-		p_2.y = t_point.Y;
+		ColorSpacePoint colorpoint;    //要把关节点用的摄像机坐标下的点转换成彩色空间的点
+		myMapper->MapCameraPointToColorSpace(joint.Position, &colorpoint);
+		p.x = colorpoint.X;
+		p.y = colorpoint.Y;
+	}
+	if (SpaceFlag == USEDepthSpace)
+	{
+		DepthSpacePoint depthpoint;    //要把关节点用的摄像机坐标下的点转换成深度空间的点
+		myMapper->MapCameraPointToDepthSpace(joint.Position, &depthpoint);
+		p.x = depthpoint.X;
+		p.y = depthpoint.Y;
+	}
+	return p;
+}
 
-		line(img, p_1, p_2, Vec3b(0, 255, 0), 5);
-		circle(img, p_1, 10, Vec3b(255, 0, 0), -1);
-		circle(img, p_2, 10, Vec3b(255, 0, 0), -1);
+// 在映射的图像上画骨骼
+void    drawline(Mat & img, Joint & joint0, Joint & joint1, ICoordinateMapper * myMapper, int SpaceFlag)
+{
+	TrackingState joint0State = joint0.TrackingState;
+	TrackingState joint1State = joint1.TrackingState;
+
+	if ((joint0State == TrackingState_NotTracked) || (joint1State == TrackingState_NotTracked))		return;
+	if ((joint0State == TrackingState_Inferred) && (joint1State == TrackingState_Inferred))	return;
+	Point	p1 = MapCameraPointToSomeSpace(myMapper, joint0, SpaceFlag),
+			p2 = MapCameraPointToSomeSpace(myMapper, joint1, SpaceFlag);
+	circle(img, p1, 10 / SpaceFlag, Vec3b(255, 0, 0), -1);
+	circle(img, p2, 10 / SpaceFlag, Vec3b(255, 0, 0), -1);
+	if ((joint0State == TrackingState_Tracked) && (joint1State == TrackingState_Tracked)) //非常确定的骨架，用白色直线
+	{
+		line(img, p1, p2, cvScalar(255, 255, 255));
 	}
 }
 
-void    drawhandstate(Mat & img, Joint & lefthand, Joint & righthand, IBody* myBodyArr, ICoordinateMapper * myMapper)
+// 在映射的图像上画手的状态
+void    drawhandstate(Mat & img, Joint & lefthand, Joint & righthand, IBody* myBodyArr, ICoordinateMapper * myMapper, int SpaceFlag)
 {
-	if (lefthand.TrackingState == TrackingState_Tracked && righthand.TrackingState == TrackingState_Tracked)
+	if (lefthand.TrackingState == TrackingState_Tracked) 
 	{
-		ColorSpacePoint l_point, r_point;    //要把关节点用的摄像机坐标下的点转换成彩色空间的点
-		Point   p_l, p_r;
-		myMapper->MapCameraPointToColorSpace(lefthand.Position, &l_point);
-		p_l.x = l_point.X;
-		p_l.y = l_point.Y;
-		myMapper->MapCameraPointToColorSpace(righthand.Position, &r_point);
-		p_r.x = r_point.X;
-		p_r.y = r_point.Y;
-
-		lefthandpoint = p_l;
-		righthandpoint = p_r;
-
+		Point   pl = MapCameraPointToSomeSpace(myMapper, lefthand, SpaceFlag);
 		HandState left;
 		myBodyArr->get_HandLeftState(&left);
-		HandState right;
-		myBodyArr->get_HandRightState(&right);
 		switch (left)
 		{
 		case HandState_Closed:
-			circle(img, p_l, 10, Scalar(0, 0, 255, 1), 20); break;
+			circle(img, pl, 10, Scalar(0, 0, 255, 1), 20); break;
 		case HandState_Open:
-			circle(img, p_l, 10, Scalar(0, 255, 0, 1), 20); break;
+			circle(img, pl, 10, Scalar(0, 255, 0, 1), 20); break;
 		case HandState_Lasso:
-			circle(img, p_l, 10, Scalar(255, 0, 0, 1), 20); break;
-		default:
-			break;
+			circle(img, pl, 10, Scalar(255, 0, 0, 1), 20); break;
 		}
+	}
+	if (righthand.TrackingState == TrackingState_Tracked)
+	{
+		Point	pr = MapCameraPointToSomeSpace(myMapper, righthand, SpaceFlag);
+		HandState right;
+		myBodyArr->get_HandRightState(&right);	
 		switch (right)
 		{
 		case HandState_Closed:
-			circle(img, p_r, 10, Scalar(0, 0, 255, 1), 20); break;
+			circle(img, pr, 10, Scalar(0, 0, 255, 1), 20); break;
 		case HandState_Open:
-			circle(img, p_r, 10, Scalar(0, 255, 0, 1), 20); break;
+			circle(img, pr, 10, Scalar(0, 255, 0, 1), 20); break;
 		case HandState_Lasso:
-			circle(img, p_r, 10, Scalar(255, 0, 0, 1), 20); break;
-		default:
-			break;
+			circle(img, pr, 10, Scalar(255, 0, 0, 1), 20); break;
 		}
 	}
 }
 
-void DrawBody(Mat & img, Joint *myJointArr, ICoordinateMapper * myMapper)
+// 在映射的图像上画整个身体
+void DrawBody(Mat & img, Joint *myJointArr, ICoordinateMapper * myMapper, int SpaceFlag)
 {
-	drawline(img, myJointArr[JointType_Head], myJointArr[JointType_Neck], myMapper);						// 头-颈
-	drawline(img, myJointArr[JointType_Neck], myJointArr[JointType_SpineShoulder], myMapper);				// 颈-脊柱肩
+	drawline(img, myJointArr[JointType_Head], myJointArr[JointType_Neck], myMapper, SpaceFlag);						// 头-颈
+	drawline(img, myJointArr[JointType_Neck], myJointArr[JointType_SpineShoulder], myMapper, SpaceFlag);				// 颈-脊柱肩
 
-	drawline(img, myJointArr[JointType_SpineShoulder], myJointArr[JointType_ShoulderLeft], myMapper);		// 脊柱肩-左肩膀
-	drawline(img, myJointArr[JointType_SpineShoulder], myJointArr[JointType_SpineMid], myMapper);			// 脊柱肩-脊柱中
-	drawline(img, myJointArr[JointType_SpineShoulder], myJointArr[JointType_ShoulderRight], myMapper);		// 脊柱肩-右肩膀
+	drawline(img, myJointArr[JointType_SpineShoulder], myJointArr[JointType_ShoulderLeft], myMapper, SpaceFlag);		// 脊柱肩-左肩膀
+	drawline(img, myJointArr[JointType_SpineShoulder], myJointArr[JointType_SpineMid], myMapper, SpaceFlag);			// 脊柱肩-脊柱中
+	drawline(img, myJointArr[JointType_SpineShoulder], myJointArr[JointType_ShoulderRight], myMapper, SpaceFlag);		// 脊柱肩-右肩膀
 
-	drawline(img, myJointArr[JointType_ShoulderLeft], myJointArr[JointType_ElbowLeft], myMapper);			// 左肩膀-左手肘
-	drawline(img, myJointArr[JointType_SpineMid], myJointArr[JointType_SpineBase], myMapper);				// 脊柱中-脊柱底
-	drawline(img, myJointArr[JointType_ShoulderRight], myJointArr[JointType_ElbowRight], myMapper);		// 右肩膀-右手肘
+	drawline(img, myJointArr[JointType_ShoulderLeft], myJointArr[JointType_ElbowLeft], myMapper, SpaceFlag);			// 左肩膀-左手肘
+	drawline(img, myJointArr[JointType_SpineMid], myJointArr[JointType_SpineBase], myMapper, SpaceFlag);				// 脊柱中-脊柱底
+	drawline(img, myJointArr[JointType_ShoulderRight], myJointArr[JointType_ElbowRight], myMapper, SpaceFlag);		// 右肩膀-右手肘
 
-	drawline(img, myJointArr[JointType_ElbowLeft], myJointArr[JointType_WristLeft], myMapper);				// 左手肘-左手腕
-	drawline(img, myJointArr[JointType_SpineBase], myJointArr[JointType_HipLeft], myMapper);				// 脊柱底-左胯部
-	drawline(img, myJointArr[JointType_SpineBase], myJointArr[JointType_HipRight], myMapper);				// 脊柱底-右胯部
-	drawline(img, myJointArr[JointType_ElbowRight], myJointArr[JointType_WristRight], myMapper);			// 右手肘-右手腕
+	drawline(img, myJointArr[JointType_ElbowLeft], myJointArr[JointType_WristLeft], myMapper, SpaceFlag);				// 左手肘-左手腕
+	drawline(img, myJointArr[JointType_SpineBase], myJointArr[JointType_HipLeft], myMapper, SpaceFlag);				// 脊柱底-左胯部
+	drawline(img, myJointArr[JointType_SpineBase], myJointArr[JointType_HipRight], myMapper, SpaceFlag);				// 脊柱底-右胯部
+	drawline(img, myJointArr[JointType_ElbowRight], myJointArr[JointType_WristRight], myMapper, SpaceFlag);			// 右手肘-右手腕
 
-	drawline(img, myJointArr[JointType_WristLeft], myJointArr[JointType_ThumbLeft], myMapper);				// 左手腕-左拇指
-	drawline(img, myJointArr[JointType_WristLeft], myJointArr[JointType_HandLeft], myMapper);				// 左手腕-左手掌
-	drawline(img, myJointArr[JointType_HipLeft], myJointArr[JointType_KneeLeft], myMapper);				// 左胯部-左膝盖
-	drawline(img, myJointArr[JointType_HipRight], myJointArr[JointType_KneeRight], myMapper);				// 右胯部-右膝盖
-	drawline(img, myJointArr[JointType_WristRight], myJointArr[JointType_ThumbRight], myMapper);			// 右手腕-右拇指
-	drawline(img, myJointArr[JointType_WristRight], myJointArr[JointType_HandRight], myMapper);			// 右手腕-右手掌
+	drawline(img, myJointArr[JointType_WristLeft], myJointArr[JointType_ThumbLeft], myMapper, SpaceFlag);				// 左手腕-左拇指
+	drawline(img, myJointArr[JointType_WristLeft], myJointArr[JointType_HandLeft], myMapper, SpaceFlag);				// 左手腕-左手掌
+	drawline(img, myJointArr[JointType_HipLeft], myJointArr[JointType_KneeLeft], myMapper, SpaceFlag);				// 左胯部-左膝盖
+	drawline(img, myJointArr[JointType_HipRight], myJointArr[JointType_KneeRight], myMapper, SpaceFlag);				// 右胯部-右膝盖
+	drawline(img, myJointArr[JointType_WristRight], myJointArr[JointType_ThumbRight], myMapper, SpaceFlag);			// 右手腕-右拇指
+	drawline(img, myJointArr[JointType_WristRight], myJointArr[JointType_HandRight], myMapper,SpaceFlag);			// 右手腕-右手掌
 
-	drawline(img, myJointArr[JointType_HandLeft], myJointArr[JointType_HandTipLeft], myMapper);			// 左手掌-手指尖
-	drawline(img, myJointArr[JointType_KneeLeft], myJointArr[JointType_FootLeft], myMapper);				// 左膝盖-左脚
-	drawline(img, myJointArr[JointType_KneeRight], myJointArr[JointType_FootRight], myMapper);				// 右膝盖-右脚
-	drawline(img, myJointArr[JointType_HandRight], myJointArr[JointType_HandTipRight], myMapper);			// 右手掌-手指尖
+	drawline(img, myJointArr[JointType_HandLeft], myJointArr[JointType_HandTipLeft], myMapper,SpaceFlag);			// 左手掌-手指尖
+	drawline(img, myJointArr[JointType_KneeLeft], myJointArr[JointType_FootLeft], myMapper, SpaceFlag);				// 左膝盖-左脚
+	drawline(img, myJointArr[JointType_KneeRight], myJointArr[JointType_FootRight], myMapper, SpaceFlag);				// 右膝盖-右脚
+	drawline(img, myJointArr[JointType_HandRight], myJointArr[JointType_HandTipRight], myMapper, SpaceFlag);			// 右手掌-手指尖
 }
 
 // 判断骨骼追踪情况：包括骨骼追踪完好且手部位置在肘上面  
-bool GestureDetection(Joint & elbow, Joint & hand, ICoordinateMapper * myMapper)
+bool WaveGestureDetection(Joint & elbow, Joint & hand, ICoordinateMapper * myMapper)
 {
 	// 骨骼追踪完好
 	if (elbow.TrackingState == TrackingState_Tracked && hand.TrackingState == TrackingState_Tracked)
 	{
 		// 要把关节点用的摄像机坐标下的点转换成彩色空间的点
-		ColorSpacePoint t_point;
-		Point	p_e, p_h;
-		myMapper->MapCameraPointToColorSpace(elbow.Position, &t_point);
-		p_e.x = t_point.X;
-		p_e.y = t_point.Y;
-		myMapper->MapCameraPointToColorSpace(hand.Position, &t_point);
-		p_h.x = t_point.X;
-		p_h.y = t_point.Y;
+		Point	p_e = MapCameraPointToSomeSpace(myMapper, elbow, USEColorSpace), 
+				p_h = MapCameraPointToSomeSpace(myMapper, hand, USEColorSpace);
 		// 手掌高于手肘
 		if (p_h.y < p_e.y)
 		{
