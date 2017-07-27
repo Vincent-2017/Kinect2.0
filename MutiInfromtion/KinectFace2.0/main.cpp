@@ -44,6 +44,7 @@ inline void ExtractFaceRotationInDegrees(const Vector4* pQuaternion, int* pPitch
 }
 
 int data[10][2];
+Point lefthandpoint, righthandpoint;
 
 int main()
 {
@@ -253,6 +254,7 @@ int main()
 					drawhandstate(colormuti, myJointArr[JointType_HandLeft], myJointArr[JointType_HandRight], myBodyArr[i], myMapper);
 					// »ÓÊÖ¼ì²â
 					GestureDetection(myJointArr[JointType_ElbowRight], myJointArr[JointType_HandRight], myMapper);
+
 				}
 				UINT64 trackingId = _UI64_MAX;
 				hr = myBodyArr[i]->get_TrackingId(&trackingId);
@@ -314,7 +316,9 @@ int main()
 							hr = faceframe->get_TrackingId(&trackingId);
 							result += "FaceID: " + to_string(trackingId) 
 								+ "  Pitch, Yaw, Roll : " + to_string(pitch) + ", " + to_string(yaw) + ", " + to_string(roll) 
-								+ " Nose(" + to_string(int(facepoint[2].X)) + ", " + to_string(int(facepoint[2].Y)) + ")";
+								+ "  Nose(" + to_string(int(facepoint[2].X)) + ", " + to_string(int(facepoint[2].Y)) + ")"
+								+ "  Left(" + to_string(int(lefthandpoint.x)) + ", " + to_string(int(lefthandpoint.y)) + ")"
+								+ "  Right(" + to_string(int(righthandpoint.x)) + ", " + to_string(int(righthandpoint.y)) + ")";
 						}
 						putText(colormuti, result, Point(0, 40*(i+1)), FONT_HERSHEY_COMPLEX, 1.0f, Scalar(255, 255, 126, 255), 2, CV_AA);
 					}
@@ -399,6 +403,9 @@ void    drawhandstate(Mat & img, Joint & lefthand, Joint & righthand, IBody* myB
 		myMapper->MapCameraPointToColorSpace(righthand.Position, &r_point);
 		p_r.x = r_point.X;
 		p_r.y = r_point.Y;
+
+		lefthandpoint = p_l;
+		righthandpoint = p_r;
 
 		HandState left;
 		myBodyArr->get_HandLeftState(&left);
