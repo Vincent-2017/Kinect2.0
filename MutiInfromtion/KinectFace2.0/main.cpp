@@ -181,6 +181,41 @@ int main()
 		}
 	}
 
+	//加载套接字
+	WSADATA wsaData;
+	char buff[1024];
+	memset(buff, 0, sizeof(buff));
+
+	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+	{
+		printf("初始化Winsock失败");
+		return 0;
+	}
+
+	SOCKADDR_IN addrSrv;
+	addrSrv.sin_family = AF_INET;
+	addrSrv.sin_port = htons(8080);//端口号
+	addrSrv.sin_addr.S_un.S_addr = inet_addr("192.168.137.1");//IP地址
+
+	//创建套接字
+	SOCKET sockClient = socket(AF_INET, SOCK_STREAM, 0);
+	if (SOCKET_ERROR == sockClient){
+		printf("Socket() error:%d", WSAGetLastError());
+		return 0;
+	}
+
+	//向服务器发出连接请求
+	if (connect(sockClient, (struct  sockaddr*)&addrSrv, sizeof(addrSrv)) == INVALID_SOCKET){
+		printf("连接失败:%d", WSAGetLastError());
+		return 0;
+	}
+	else
+	{
+		//接收数据
+		recv(sockClient, buff, sizeof(buff), 0);
+		printf("%s\n", buff);
+	}
+
 	while (1)
 	{
 		/********************************   彩色帧  ********************************/
@@ -253,11 +288,23 @@ int main()
 					string leftstr , rightstr ;
 					leftstr = lhandstate + "(" + to_string(int(leftcolorpoint.x)) + ", " + to_string(int(leftcolorpoint.y)) + ", " + to_string(leftdepth) + ")";
 					rightstr = rhandstate + "(" + to_string(int(rightcolorpoint.x)) + ", " + to_string(int(rightcolorpoint.y)) + ", " + to_string(rightdepth) + ")";
-					if (leftcolorpoint.y - 100 > 1 && rightcolorpoint.y - 100 > 1 && leftcolorpoint.x - 200 > 1 && rightcolorpoint.x - 200 > 1)
+					//if (leftcolorpoint.y - 100 > 1 && rightcolorpoint.y - 100 > 1 && leftcolorpoint.x - 200 > 1 && rightcolorpoint.x - 200 > 1)
+					//{
+					//	putText(colormuti, leftstr, Point(leftcolorpoint.x - 200, leftcolorpoint.y - 100), FONT_HERSHEY_SIMPLEX, 1.0f, Scalar(0, 0, 255, 255), 2, CV_AA);
+					//	putText(colormuti, rightstr, Point(rightcolorpoint.x - 200, rightcolorpoint.y - 100), FONT_HERSHEY_SIMPLEX, 1.0f, Scalar(0, 0, 255, 255), 2, CV_AA);
+					//	//cout << leftdepth << "  " << rightdepth << endl;
+					//}
+					if (lhandstate == "Close")
 					{
-						putText(colormuti, leftstr, Point(leftcolorpoint.x - 200, leftcolorpoint.y - 100), FONT_HERSHEY_SIMPLEX, 1.0f, Scalar(0, 0, 255, 255), 2, CV_AA);
-						putText(colormuti, rightstr, Point(rightcolorpoint.x - 200, rightcolorpoint.y - 100), FONT_HERSHEY_SIMPLEX, 1.0f, Scalar(0, 0, 255, 255), 2, CV_AA);
-						//cout << leftdepth << "  " << rightdepth << endl;
+						char buffs[100];
+						strcpy(buffs, leftstr.c_str());
+						send(sockClient, buffs, sizeof(buffs), 0);
+					}
+					if (rhandstate == "Close")
+					{
+						char buffs[100];
+						strcpy(buffs, rightstr.c_str());
+						send(sockClient, buffs, sizeof(buffs), 0);
 					}
 				}
 				// 把骨骼ID赋值给面部ID

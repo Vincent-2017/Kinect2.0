@@ -1,6 +1,9 @@
 #ifndef GLOBAL_H
 #define GLOBAL_H
 
+#include <stdlib.h>
+#include <stdio.h>
+#include "winsock2.h" //必须放在前面，不然出错
 #include <iostream>
 #include "opencv2/core.hpp"
 #include "opencv2/imgproc.hpp"
@@ -12,6 +15,7 @@
 #pragma comment ( lib, "kinect20.lib" )  
 #pragma comment ( lib, "Kinect20.face.lib" )  
 #pragma comment ( lib, "Kinect20.VisualGestureBuilder.lib" )  
+#pragma comment(lib,"ws2_32.lib")//引用库文件
 
 using namespace cv;
 using namespace std;
