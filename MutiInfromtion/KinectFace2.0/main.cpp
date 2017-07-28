@@ -194,8 +194,7 @@ int main()
 		while (myDepthReader->AcquireLatestFrame(&myDepthFrame) != S_OK);
 		myDepthFrame->CopyFrameDataToArray(depthHeight * depthWidth, (UINT16 *)depth.data); //先把数据存入16位的图像矩阵中
 		myDepthFrame->Release();
-		depth.convertTo(showdepth, CV_8UC1, 255.0 / 4500);   //再把16位转换为8位
-		//cout << get_pixel(showdepth, Point(200, 200)) << endl;
+		depth.convertTo(showdepth, CV_8UC1, 255.0 / 2500);   //再把16位转换为8位
 		depthmuti = showdepth.clone();
 		//imshow("Depth", showdepth);
 
@@ -256,8 +255,8 @@ int main()
 					rightstr = rhandstate + "(" + to_string(int(rightcolorpoint.x)) + ", " + to_string(int(rightcolorpoint.y)) + ", " + to_string(rightdepth) + ")";
 					if (leftcolorpoint.y - 100 > 1 && rightcolorpoint.y - 100 > 1 && leftcolorpoint.x - 200 > 1 && rightcolorpoint.x - 200 > 1)
 					{
-						putText(colormuti, leftstr, Point(leftcolorpoint.x-200, leftcolorpoint.y - 100), FONT_HERSHEY_COMPLEX, 1.0f, Scalar(0, 0, 255, 255), 2, CV_AA);
-						putText(colormuti, rightstr, Point(rightcolorpoint.x-200, rightcolorpoint.y - 100), FONT_HERSHEY_COMPLEX, 1.0f, Scalar(0, 0, 255, 255), 2, CV_AA);
+						putText(colormuti, leftstr, Point(leftcolorpoint.x - 200, leftcolorpoint.y - 100), FONT_HERSHEY_SIMPLEX, 1.0f, Scalar(0, 0, 255, 255), 2, CV_AA);
+						putText(colormuti, rightstr, Point(rightcolorpoint.x - 200, rightcolorpoint.y - 100), FONT_HERSHEY_SIMPLEX, 1.0f, Scalar(0, 0, 255, 255), 2, CV_AA);
 						//cout << leftdepth << "  " << rightdepth << endl;
 					}
 				}
@@ -323,11 +322,11 @@ int main()
 							ExtractFaceRotationInDegrees(&faceRotation, &pitch, &yaw, &roll);
 							UINT64 trackingId = _UI64_MAX;
 							hr = faceframe->get_TrackingId(&trackingId);
-							result += //"FaceID: " + to_string(trackingId)
+							result += "FaceID: " + to_string(trackingId)
 									+ "  Pitch, Yaw, Roll : " + to_string(pitch) + ", " + to_string(yaw) + ", " + to_string(roll)
 									+"  Nose(" + to_string(int(facepoint[2].X)) + ", " + to_string(int(facepoint[2].Y)) + ")";
 						}
-						putText(colormuti, result, Point(0, 25 * (i + 1)), FONT_HERSHEY_COMPLEX, 1.0f, Scalar(0, 0, 255, 255), 2, CV_AA);
+						putText(colormuti, result, Point(0, 25 * (i + 1)), FONT_HERSHEY_SIMPLEX, 1.0f, Scalar(0, 0, 255, 255), 2, CV_AA);
 					}
 					SafeRelease(faceresult);
 				}
@@ -339,9 +338,9 @@ int main()
 		//cv::resize(colormuti, show, cv::Size(), 0.5, 0.5);
 		cv::imshow("ColorMuti", colormuti);
 
-		imshow("BodyindexMuti", bodyindexmuti);
+		//imshow("BodyindexMuti", bodyindexmuti);
 
-		imshow("DepthMuti", depthmuti);
+		//imshow("DepthMuti", depthmuti);
 
 		if (cv::waitKey(34) == VK_ESCAPE)
 		{

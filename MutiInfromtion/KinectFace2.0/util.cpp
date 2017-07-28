@@ -61,7 +61,13 @@ void    drawhandstate(Mat & img, Joint & lefthand, Joint & righthand, IBody* myB
 			circle(img, pl, 10, Scalar(255, 0, 0, 1), 20); 
 			lhandstate = "Lasso"; 
 			break;
+		default:lhandstate = "Unknown";
+			break;
 		}
+	}
+	else
+	{
+		lhandstate = "NotTracked";
 	}
 	if (righthand.TrackingState == TrackingState_Tracked)
 	{
@@ -82,7 +88,13 @@ void    drawhandstate(Mat & img, Joint & lefthand, Joint & righthand, IBody* myB
 			circle(img, pr, 10, Scalar(255, 0, 0, 1), 20); 
 			rhandstate = "Lasso"; 
 			break;
+		default:lhandstate = "Unknown";
+			break;
 		}
+	}
+	else
+	{
+		rhandstate = "NotTracked";
 	}
 }
 
