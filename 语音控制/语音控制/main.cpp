@@ -5,6 +5,10 @@
 #include <comutil.h>
 #include <string.h>
 
+#include <gdiplus.h>
+using namespace Gdiplus;
+ULONG_PTR m_gdiplusToken;
+
 #pragma comment(lib,"sapi.lib")
 #ifdef _UNICODE
 #pragma   comment(lib,   "comsuppw.lib")  //_com_util::ConvertBSTRToString
@@ -32,6 +36,10 @@ int WINAPI WinMain(
 	PSTR szCmdLine,			 // 命令行参数 字符串 char*
 	int iCmdShow)			 // 主窗口的显示方式
 {
+	// 初始化GDI+    
+	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+	Gdiplus::GdiplusStartup(&m_gdiplusToken, &gdiplusStartupInput, NULL);
+
 	HWND hwnd;
 	MSG msg;
 	// 类名
@@ -89,6 +97,7 @@ int WINAPI WinMain(
 		TranslateMessage(&msg);	// 翻译消息
 		DispatchMessage(&msg);	// 分发消息
 	}
+	Gdiplus::GdiplusShutdown(m_gdiplusToken);
 	return msg.wParam;
 }
 
@@ -216,9 +225,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 						 break;
 	}
 	case WM_PAINT:
-		hdc = BeginPaint(hwnd, &ps);
-		EndPaint(hwnd, &ps);
-		break; 
+	{
+					 int width, height;
+					 hdc = BeginPaint(hwnd, &ps);
+					 // TODO:  在此添加任意绘图代码...  
+					 //加载图像  
+					 Image image(L"1.png");
+					 if (image.GetLastStatus() != Status::Ok){
+						 MessageBox(hwnd, L"加载图片失败!", L"提示", MB_OK);
+						 return -1;
+					 }
+					 //取得宽度和高度  
+					 width = image.GetWidth();
+					 height = image.GetHeight();
+					 //绘图  
+					 Graphics graphics(hdc);
+					 graphics.DrawImage(&image, 0, 0, width, height);
+					 EndPaint(hwnd, &ps);
+					 break;
+	}
+
 	case WM_DESTROY:
 		PostQuitMessage(0); // 窗口销毁
 		break;
