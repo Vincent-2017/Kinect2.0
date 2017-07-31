@@ -4,12 +4,12 @@
 #include <sapi.h>
 #include <comutil.h>
 #include <string.h>
-
 #include <gdiplus.h>
 using namespace Gdiplus;
 ULONG_PTR m_gdiplusToken;
 
 #pragma comment(lib,"sapi.lib")
+#pragma comment(lib,"gdiplus.lib")
 #ifdef _UNICODE
 #pragma   comment(lib,   "comsuppw.lib")  //_com_util::ConvertBSTRToString
 #else
