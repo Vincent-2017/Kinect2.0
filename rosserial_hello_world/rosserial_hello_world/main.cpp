@@ -9,7 +9,7 @@ using std::string;
 int main()
 {
 	ros::NodeHandle nh;
-	char *ros_master = "192.168.1.102";
+	char *ros_master = "192.168.137.9";
 
 	printf("Connecting to server at %s\n", ros_master);
 	nh.initNode(ros_master);
@@ -22,12 +22,12 @@ int main()
 	printf("Go robot go!\n");
 	while (1)
 	{
-		twist_msg.linear.x = 0.4;
+		twist_msg.linear.x += 0.2;
 		twist_msg.linear.y = 0;
 		twist_msg.linear.z = 0;
 		twist_msg.angular.x = 0;
 		twist_msg.angular.y = 0;
-		twist_msg.angular.z = 0.2;
+		twist_msg.angular.z = 0;
 		cmd_vel_pub.publish(&twist_msg);
 
 		nh.spinOnce();
