@@ -5,9 +5,19 @@
     </DEFINE>
   <RULE NAME="COMMAND" ID="CMD" TOPLEVEL="ACTIVE">
    <L>
-    <P>腾讯</P>
-    <P>确定</P>
-    <P>音乐</P>
+    <P>带路</P>
+     <P>前台</P>
+     <P>洗手间</P>
+     <P>候客厅</P>
+    <P>饮食</P>
+     <P>可乐</P>
+     <P>咖啡</P>
+     <P>盖浇饭</P>
+    <P>应用</P>
+     <P>腾讯</P>
+     <P>浏览器</P>
+     <P>音乐</P>
+    <P>自动跟随</P>
     </L>
    </RULE>
 </GRAMMAR>

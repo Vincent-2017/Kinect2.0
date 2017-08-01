@@ -73,7 +73,7 @@ int WINAPI WinMain(
 	HWND hwnd;
 	MSG msg;
 	// 类名
-	TCHAR szAppName[] = TEXT("语音控制Demo");
+	TCHAR szAppName[] = TEXT("语音控制");
 	// 设计窗口类
 	WNDCLASS wndclass;
 
@@ -203,6 +203,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 					  //在开始识别时，激活语法进行识别
 					  // hr = m_cpDictationGrammar->SetDictationState(SPRS_ACTIVE); // dictation
 					  hr = m_cpCmdGramma->SetRuleState(NULL, NULL, SPRS_ACTIVE); // C&C
+
+					  speak(L"您需要帮助吗？ 请说出“开始聆听”来激活语音控制");
+
 					  break;
 	}
 	case WM_RECOEVENT:
@@ -230,24 +233,78 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 													  char * lpszText2 = _com_util::ConvertBSTRToString(SRout);
 													  if (b_Cmd_Grammar)
 													  {
+														  if (strcmp("带路", lpszText2) == 0)
+														  {
+															  speak(L"好的，请说出目的地");
+															  sendcode(hComm, "show the way \n");
+														  }
+														  if (strcmp("前台", lpszText2) == 0)
+														  {
+															  speak(L"好的，请跟我到前台");
+															  sendcode(hComm, "reception desk \n");
+														  }
+														  if (strcmp("洗手间", lpszText2) == 0)
+														  {
+															  speak(L"好的，请跟我来洗手间");
+															  sendcode(hComm, "bathroom \n");
+														  }
+														  if (strcmp("候客厅", lpszText2) == 0)
+														  {
+															  speak(L"好的，请跟我来候客厅");
+															  sendcode(hComm, "Waiting room \n");
+														  }
+
+														  if (strcmp("饮食", lpszText2) == 0)
+														  {
+															  speak(L"好的，请说出您的需求");
+															  sendcode(hComm, "food and drink \n");
+														  }
+														  if (strcmp("可乐", lpszText2) == 0)
+														  {
+															  speak(L"好的，即将为您提供可乐");
+															  sendcode(hComm, "cola \n");
+														  }
+														  if (strcmp("咖啡", lpszText2) == 0)
+														  {
+															  speak(L"好的，即将为您提供咖啡");
+															  sendcode(hComm, "coffee \n");
+														  }
+														  if (strcmp("盖浇饭", lpszText2) == 0)
+														  {
+															  speak(L"好的，即将为您准备盖浇饭，请稍等");
+															  sendcode(hComm, "Rice \n");
+														  }
+
+
+														  if (strcmp("应用", lpszText2) == 0)
+														  {
+															  speak(L"好的，请说出您想打开的应用");
+															  sendcode(hComm, "application \n");
+														  }
 														  if (strcmp("腾讯", lpszText2) == 0)
 														  {
-															  speak(L"好的");
-															  //打开TIM.exe
+															  speak(L"好的，即将为您打开QQ");
 															  ShellExecuteA(NULL, "open", "C:\\SoftWare\\TIM\\Bin\\TIM.exe", 0, 0, 1);
-															  sendcode(hComm, "腾讯");
+															  sendcode(hComm, "QQ \n");
 														  }
-														  if (strcmp("确定", lpszText2) == 0)
+														  if (strcmp("浏览器", lpszText2) == 0)
 														  {
-															  //按下回车键
-															  keybd_event(VK_RETURN, 0, 0, 0);
-															  keybd_event(VK_RETURN, 0, KEYEVENTF_KEYUP, 0);
+															  speak(L"好的，即将为您打开QQ浏览器");
+															  ShellExecuteA(NULL, "open", "C:\\SoftWare\\QQ浏览器\\QQBrowser.exe", 0, 0, 1);
+															  sendcode(hComm, "QQ Browser \n");
 														  }
 														  if (strcmp("音乐", lpszText2) == 0)
 														  {
-															  speak(L"好的");
-															  //调用系统程序wmplayer.exe播放音乐
-															  ShellExecuteA(NULL, "open", "\"C:\\Program Files (x86)\\Windows Media Player\\wmplayer.exe\"", "‪C:\\Users\\Fan Zhou\\Desktop\\123.mp3", 0, 0);
+															  speak(L"好的，即将为您打开音乐播放器");
+															  ShellExecuteA(NULL, "open", "‪C:\\SoftWare\\CloudMusic\\cloudmusic.exe", 0, 0, 1);
+															  sendcode(hComm, "Music \n");
+														  }
+
+														  if (strcmp("自动跟随", lpszText2) == 0)
+														  {
+															  speak(L"好的，已打开自动跟随服务");
+															  ShellExecuteA(NULL, "open", "C:\\Users\\VincentZHOU\\Desktop\\kinect\\MutiInformtion.exe", 0, 0, 1);
+															  sendcode(hComm, "automatic following \n");
 														  }
 													  }
 							 }
@@ -299,7 +356,7 @@ int speak(wchar_t *str)
 	if (SUCCEEDED(hr))
 	{
 		pVoice->SetVolume((USHORT)100); //设置音量，范围是 0 -100
-		pVoice->SetRate(2); //设置速度，范围是 -10 - 10
+		pVoice->SetRate(0); //设置速度，范围是 -10 - 10
 		hr = pVoice->Speak(str, 0, NULL);
 		pVoice->Release();
 		pVoice = NULL;
