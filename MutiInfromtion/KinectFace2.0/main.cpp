@@ -279,8 +279,8 @@ int main()
 					leftdepth = get_pixel(showdepth, leftdepthpoint);
 					rightdepth = get_pixel(showdepth, rightdepthpoint);
 					string leftstr , rightstr ;
-					leftstr = lhandstate + "(" + to_string(int(leftcolorpoint.x)) + ", " + to_string(int(leftcolorpoint.y)) + ", " + to_string(leftdepth) + ")";
-					rightstr = rhandstate + "(" + to_string(int(rightcolorpoint.x)) + ", " + to_string(int(rightcolorpoint.y)) + ", " + to_string(rightdepth) + ")";
+					leftstr = lhandstate + "(" + to_string(int(leftcolorpoint.x)) + ", " + to_string(int(leftcolorpoint.y)) + ", " + to_string(leftdepth) + ") \n";
+					rightstr = rhandstate + "(" + to_string(int(rightcolorpoint.x)) + ", " + to_string(int(rightcolorpoint.y)) + ", " + to_string(rightdepth) + ") \n";
 					//if (leftcolorpoint.y - 100 > 1 && rightcolorpoint.y - 100 > 1 && leftcolorpoint.x - 200 > 1 && rightcolorpoint.x - 200 > 1)
 					//{
 					//	putText(colormuti, leftstr, Point(leftcolorpoint.x - 200, leftcolorpoint.y - 100), FONT_HERSHEY_SIMPLEX, 1.0f, Scalar(0, 0, 255, 255), 2, CV_AA);
