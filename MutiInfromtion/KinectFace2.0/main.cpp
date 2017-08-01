@@ -150,41 +150,41 @@ int main()
 		facesource[i]->OpenReader(&facereader[i]);
 	}
 
-	/********************************   socket通信  ********************************/
-	//加载套接字
-	WSADATA wsaData;
-	char buff[1024];
-	memset(buff, 0, sizeof(buff));
+	///********************************   socket通信  ********************************/
+	////加载套接字
+	//WSADATA wsaData;
+	//char buff[1024];
+	//memset(buff, 0, sizeof(buff));
 
-	if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
-	{
-		printf("初始化Winsock失败");
-		return 0;
-	}
+	//if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+	//{
+	//	printf("初始化Winsock失败");
+	//	return 0;
+	//}
 
-	SOCKADDR_IN addrSrv;
-	addrSrv.sin_family = AF_INET;
-	addrSrv.sin_port = htons(8080);//端口号
-	addrSrv.sin_addr.S_un.S_addr = inet_addr("192.168.137.1");//IP地址
+	//SOCKADDR_IN addrSrv;
+	//addrSrv.sin_family = AF_INET;
+	//addrSrv.sin_port = htons(8080);//端口号
+	//addrSrv.sin_addr.S_un.S_addr = inet_addr("192.168.137.1");//IP地址
 
-	//创建套接字
-	SOCKET sockClient = socket(AF_INET, SOCK_STREAM, 0);
-	if (SOCKET_ERROR == sockClient){
-		printf("Socket() error:%d", WSAGetLastError());
-		return 0;
-	}
+	////创建套接字
+	//SOCKET sockClient = socket(AF_INET, SOCK_STREAM, 0);
+	//if (SOCKET_ERROR == sockClient){
+	//	printf("Socket() error:%d", WSAGetLastError());
+	//	return 0;
+	//}
 
-	//向服务器发出连接请求
-	if (connect(sockClient, (struct  sockaddr*)&addrSrv, sizeof(addrSrv)) == INVALID_SOCKET){
-		printf("连接失败:%d", WSAGetLastError());
-		return 0;
-	}
-	else
-	{
-		//接收数据
-		recv(sockClient, buff, sizeof(buff), 0);
-		printf("%s\n", buff);
-	}
+	////向服务器发出连接请求
+	//if (connect(sockClient, (struct  sockaddr*)&addrSrv, sizeof(addrSrv)) == INVALID_SOCKET){
+	//	printf("连接失败:%d", WSAGetLastError());
+	//	return 0;
+	//}
+	//else
+	//{
+	//	//接收数据
+	//	recv(sockClient, buff, sizeof(buff), 0);
+	//	printf("%s\n", buff);
+	//}
 
 	/********************************   串口通信  ********************************/
 	//1.打开指定串口
@@ -291,7 +291,7 @@ int main()
 					{
 						char buffs[100];
 						strcpy(buffs, leftstr.c_str());
-						send(sockClient, buffs, sizeof(buffs), 0);
+						//send(sockClient, buffs, sizeof(buffs), 0);
 						//3.往串口写数据
 						DWORD nNumberOfBytesToWrite = strlen(buffs); //将要写入的数据长度
 						DWORD nBytesSent; //实际写入的数据长度
@@ -301,7 +301,7 @@ int main()
 					{
 						char buffs[100];
 						strcpy(buffs, rightstr.c_str());
-						send(sockClient, buffs, sizeof(buffs), 0);
+						//send(sockClient, buffs, sizeof(buffs), 0);
 						//3.往串口写数据
 						DWORD nNumberOfBytesToWrite = strlen(buffs); //将要写入的数据长度
 						DWORD nBytesSent; //实际写入的数据长度
