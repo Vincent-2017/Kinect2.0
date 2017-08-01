@@ -150,37 +150,7 @@ int main()
 		facesource[i]->OpenReader(&facereader[i]);
 	}
 
-	/********************************   姿势数据  ********************************/
-	IVisualGestureBuilderFrameSource* gesturesource[BODY_COUNT];
-	IVisualGestureBuilderFrameReader* gesturereader[BODY_COUNT];
-	for (int count = 0; count < BODY_COUNT; count++)
-	{
-		CreateVisualGestureBuilderFrameSource(mySensor, 0, &gesturesource[count]);
-		if (FAILED(hr))
-		{
-			std::cerr << "Error : CreateVisualGestureBuilderFrameSource" << std::endl;
-			return -1;
-		}
-		gesturesource[count]->OpenReader(&gesturereader[count]);
-	}
-	// 读取样本
-	IVisualGestureBuilderDatabase* gesturedatabase;
-	CreateVisualGestureBuilderDatabaseInstanceFromFile(L"wave.gba", &gesturedatabase);
-	// 样本库中的姿势和数目
-	UINT gesturecount = 0;
-	gesturedatabase->get_AvailableGesturesCount(&gesturecount);
-	IGesture* gesture;
-	hr = gesturedatabase->get_AvailableGestures(gesturecount, &gesture);
-	// 添加姿势到数据源中，并使能
-	if (SUCCEEDED(hr) && gesture != nullptr)
-	{
-		for (int count = 0; count < BODY_COUNT; count++)
-		{
-			gesturesource[count]->AddGesture(gesture);
-			gesturesource[count]->SetIsEnabled(gesture, true);
-		}
-	}
-
+	/********************************   socket通信  ********************************/
 	//加载套接字
 	WSADATA wsaData;
 	char buff[1024];
@@ -215,6 +185,29 @@ int main()
 		recv(sockClient, buff, sizeof(buff), 0);
 		printf("%s\n", buff);
 	}
+
+	/********************************   串口通信  ********************************/
+	//1.打开指定串口
+	HANDLE hComm = CreateFileA("COM3", // 串口名称(COMx)
+		GENERIC_READ | GENERIC_WRITE, // 串口属性为可读/写
+		0, // 串口设备必须被独占性的访问
+		NULL, // 无安全属性
+		OPEN_EXISTING, // 串口设备必须使用OPEN_EXISTING参数
+		FILE_ATTRIBUTE_NORMAL, // 同步式 I/O
+		0); // 对于串口设备而言此参数必须为0
+	if (hComm == INVALID_HANDLE_VALUE)
+	{
+		//如果该串口不存在或者正被另外一个应用程序使用，
+		//则打开失败，本程序退出
+		return FALSE;
+	}
+	//2.设置串口参数：波特率、数据位、校验位、停止位等信息
+	DCB dcb;
+	GetCommState(hComm, &dcb); //获取该端口的默认参数
+	//修改波特率
+	dcb.BaudRate = 115200;
+	//重新设置参数
+	SetCommState(hComm, &dcb);
 
 	while (1)
 	{
@@ -299,13 +292,28 @@ int main()
 						char buffs[100];
 						strcpy(buffs, leftstr.c_str());
 						send(sockClient, buffs, sizeof(buffs), 0);
+						//3.往串口写数据
+						DWORD nNumberOfBytesToWrite = strlen(buffs); //将要写入的数据长度
+						DWORD nBytesSent; //实际写入的数据长度
+						WriteFile(hComm, buffs, nNumberOfBytesToWrite, &nBytesSent, NULL);
 					}
 					if (rhandstate == "Close")
 					{
 						char buffs[100];
 						strcpy(buffs, rightstr.c_str());
 						send(sockClient, buffs, sizeof(buffs), 0);
+						//3.往串口写数据
+						DWORD nNumberOfBytesToWrite = strlen(buffs); //将要写入的数据长度
+						DWORD nBytesSent; //实际写入的数据长度
+						WriteFile(hComm, buffs, nNumberOfBytesToWrite, &nBytesSent, NULL);
 					}
+					////读串口数据
+					//char lpReadBuf[1024] = { 0 }; //接收缓冲区长度为1024，内容都为0
+					//DWORD nNumberOfBytesToRead = 1024; //最大读取1024个字节
+					//DWORD nBytesRead;
+					//ReadFile(hComm, lpReadBuf, nNumberOfBytesToRead, &nBytesRead, NULL);
+					//if (strlen(lpReadBuf) != 0)
+					//	printf("Read Data: %s \n", lpReadBuf);
 				}
 				// 把骨骼ID赋值给面部ID
 				UINT64 trackingId = _UI64_MAX;

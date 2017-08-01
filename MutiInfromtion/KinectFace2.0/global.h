@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include "winsock2.h" //必须放在前面，不然出错
 #include <iostream>
+#include <windows.h>
 #include "opencv2/core.hpp"
 #include "opencv2/imgproc.hpp"
 #include "opencv2/highgui.hpp"
