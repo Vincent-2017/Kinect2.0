@@ -5,6 +5,9 @@
 #include <comutil.h>
 #include <string.h>
 #include <gdiplus.h>
+
+using namespace std;
+
 using namespace Gdiplus;
 ULONG_PTR m_gdiplusToken;
 
@@ -22,6 +25,8 @@ ULONG_PTR m_gdiplusToken;
 // 必须要进行前导声明
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
+HANDLE hComm;
+
 BOOL b_initSR;
 BOOL b_Cmd_Grammar;
 CComPtr<ISpRecognizer> m_cpRecoEngine; // 语音识别引擎(recognition)的接口
@@ -29,6 +34,7 @@ CComPtr<ISpRecoContext> m_cpRecoCtxt; // 识别引擎上下文(context)的接口
 CComPtr<ISpRecoGrammar> m_cpCmdGramma; //识别语法(grammer)接口
 
 int speak(wchar_t *str);
+void sendcode(HANDLE Com, char* str);
 
 int WINAPI WinMain(
 	HINSTANCE hInstance,     // 当前应用程序的实例句柄
@@ -39,6 +45,30 @@ int WINAPI WinMain(
 	// 初始化GDI+    
 	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
 	Gdiplus::GdiplusStartup(&m_gdiplusToken, &gdiplusStartupInput, NULL);
+
+	/********************************   串口通信  ********************************/
+	//1.打开指定串口
+	hComm = CreateFileA("COM3", // 串口名称(COMx)
+		GENERIC_READ | GENERIC_WRITE, // 串口属性为可读/写
+		0, // 串口设备必须被独占性的访问
+		NULL, // 无安全属性
+		OPEN_EXISTING, // 串口设备必须使用OPEN_EXISTING参数
+		FILE_ATTRIBUTE_NORMAL, // 同步式 I/O
+		0); // 对于串口设备而言此参数必须为0
+	if (hComm == INVALID_HANDLE_VALUE)
+	{
+		//如果该串口不存在或者正被另外一个应用程序使用，
+		//则打开失败，本程序退出
+		return FALSE;
+	}
+	//2.设置串口参数：波特率、数据位、校验位、停止位等信息
+	DCB dcb;
+	GetCommState(hComm, &dcb); //获取该端口的默认参数
+	//修改波特率
+	dcb.BaudRate = 115200;
+	//重新设置参数
+	SetCommState(hComm, &dcb);
+
 
 	HWND hwnd;
 	MSG msg;
@@ -205,6 +235,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 															  speak(L"好的");
 															  //打开TIM.exe
 															  ShellExecuteA(NULL, "open", "C:\\SoftWare\\TIM\\Bin\\TIM.exe", 0, 0, 1);
+															  sendcode(hComm, "腾讯");
 														  }
 														  if (strcmp("确定", lpszText2) == 0)
 														  {
@@ -276,4 +307,15 @@ int speak(wchar_t *str)
 	//千万不要忘记 释放com资源
 	::CoUninitialize();
 	return TRUE;
+}
+
+void sendcode(HANDLE Com , char* str)
+{
+	char buffs[100];
+	strcpy(buffs, str);
+	//send(sockClient, buffs, sizeof(buffs), 0);
+	//3.往串口写数据
+	DWORD nNumberOfBytesToWrite = strlen(buffs); //将要写入的数据长度
+	DWORD nBytesSent; //实际写入的数据长度
+	WriteFile(Com, buffs, nNumberOfBytesToWrite, &nBytesSent, NULL);
 }
