@@ -150,64 +150,19 @@ int main()
 		facesource[i]->OpenReader(&facereader[i]);
 	}
 
-	///********************************   socket通信  ********************************/
-	////加载套接字
-	//WSADATA wsaData;
-	//char buff[1024];
-	//memset(buff, 0, sizeof(buff));
+	/********************************   ROS客户端  ********************************/
+	//ros::NodeHandle nh;
+	//char *ros_master = "192.168.137.5";
 
-	//if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
-	//{
-	//	printf("初始化Winsock失败");
-	//	return 0;
-	//}
+	//printf("Connecting to server at %s\n", ros_master);
+	//nh.initNode(ros_master);
 
-	//SOCKADDR_IN addrSrv;
-	//addrSrv.sin_family = AF_INET;
-	//addrSrv.sin_port = htons(8080);//端口号
-	//addrSrv.sin_addr.S_un.S_addr = inet_addr("192.168.137.1");//IP地址
+	//printf("Advertising cmd_vel message\n");
+	//geometry_msgs::Twist twist_msg;
+	//ros::Publisher cmd_vel_pub("cmd_vel", &twist_msg);
+	//nh.advertise(cmd_vel_pub);
 
-	////创建套接字
-	//SOCKET sockClient = socket(AF_INET, SOCK_STREAM, 0);
-	//if (SOCKET_ERROR == sockClient){
-	//	printf("Socket() error:%d", WSAGetLastError());
-	//	return 0;
-	//}
-
-	////向服务器发出连接请求
-	//if (connect(sockClient, (struct  sockaddr*)&addrSrv, sizeof(addrSrv)) == INVALID_SOCKET){
-	//	printf("连接失败:%d", WSAGetLastError());
-	//	return 0;
-	//}
-	//else
-	//{
-	//	//接收数据
-	//	recv(sockClient, buff, sizeof(buff), 0);
-	//	printf("%s\n", buff);
-	//}
-
-	/********************************   串口通信  ********************************/
-	//1.打开指定串口
-	HANDLE hComm = CreateFileA("COM3", // 串口名称(COMx)
-		GENERIC_READ | GENERIC_WRITE, // 串口属性为可读/写
-		0, // 串口设备必须被独占性的访问
-		NULL, // 无安全属性
-		OPEN_EXISTING, // 串口设备必须使用OPEN_EXISTING参数
-		FILE_ATTRIBUTE_NORMAL, // 同步式 I/O
-		0); // 对于串口设备而言此参数必须为0
-	if (hComm == INVALID_HANDLE_VALUE)
-	{
-		//如果该串口不存在或者正被另外一个应用程序使用，
-		//则打开失败，本程序退出
-		return FALSE;
-	}
-	//2.设置串口参数：波特率、数据位、校验位、停止位等信息
-	DCB dcb;
-	GetCommState(hComm, &dcb); //获取该端口的默认参数
-	//修改波特率
-	dcb.BaudRate = 115200;
-	//重新设置参数
-	SetCommState(hComm, &dcb);
+	//printf("Go robot go!\n");
 
 	while (1)
 	{
@@ -263,21 +218,30 @@ int main()
 				//如果侦测到就把关节数据输入到数组并画图
 				if (myBodyArr[i]->GetJoints(JointType_Count, myJointArr) == S_OK)
 				{
+					// 彩色空间
 					DrawBody(colormuti, myJointArr, myMapper, USEColorSpace);
 					drawhandstate(colormuti, myJointArr[JointType_HandLeft], myJointArr[JointType_HandRight], myBodyArr[i], myMapper, USEColorSpace);
+					// 挥手检测
 					WaveGestureDetection(myJointArr[JointType_ElbowRight], myJointArr[JointType_HandRight], myMapper);
+					// 左右手位置信息
 					leftcolorpoint = MapCameraPointToSomeSpace(myMapper, myJointArr[JointType_HandLeft], USEColorSpace);
 					rightcolorpoint = MapCameraPointToSomeSpace(myMapper, myJointArr[JointType_HandRight], USEColorSpace);
 
+					// 人物索引空间
 					DrawBody(bodyindexmuti, myJointArr, myMapper, USEDepthSpace);
 					drawhandstate(bodyindexmuti, myJointArr[JointType_HandLeft], myJointArr[JointType_HandRight], myBodyArr[i], myMapper, USEDepthSpace);
 				
+					// 深度空间
 					DrawBody(depthmuti, myJointArr, myMapper, USEDepthSpace);
 					drawhandstate(depthmuti, myJointArr[JointType_HandLeft], myJointArr[JointType_HandRight], myBodyArr[i], myMapper, USEDepthSpace);
+					// 左右手位置信息
 					leftdepthpoint = MapCameraPointToSomeSpace(myMapper, myJointArr[JointType_HandLeft],  USEDepthSpace);
 					rightdepthpoint = MapCameraPointToSomeSpace(myMapper, myJointArr[JointType_HandRight], USEDepthSpace);
+					// 左右手深度信息
 					leftdepth = get_pixel(showdepth, leftdepthpoint);
 					rightdepth = get_pixel(showdepth, rightdepthpoint);
+
+					// 显示信息
 					string leftstr , rightstr ;
 					leftstr = lhandstate + "(" + to_string(int(leftcolorpoint.x)) + ", " + to_string(int(leftcolorpoint.y)) + ", " + to_string(leftdepth) + ") \n";
 					rightstr = rhandstate + "(" + to_string(int(rightcolorpoint.x)) + ", " + to_string(int(rightcolorpoint.y)) + ", " + to_string(rightdepth) + ") \n";
@@ -287,33 +251,36 @@ int main()
 					//	putText(colormuti, rightstr, Point(rightcolorpoint.x - 200, rightcolorpoint.y - 100), FONT_HERSHEY_SIMPLEX, 1.0f, Scalar(0, 0, 255, 255), 2, CV_AA);
 					//	//cout << leftdepth << "  " << rightdepth << endl;
 					//}
-					if (lhandstate == "Close")
-					{
-						char buffs[100];
-						strcpy(buffs, leftstr.c_str());
-						//send(sockClient, buffs, sizeof(buffs), 0);
-						//3.往串口写数据
-						DWORD nNumberOfBytesToWrite = strlen(buffs); //将要写入的数据长度
-						DWORD nBytesSent; //实际写入的数据长度
-						WriteFile(hComm, buffs, nNumberOfBytesToWrite, &nBytesSent, NULL);
-					}
-					if (rhandstate == "Close")
-					{
-						char buffs[100];
-						strcpy(buffs, rightstr.c_str());
-						//send(sockClient, buffs, sizeof(buffs), 0);
-						//3.往串口写数据
-						DWORD nNumberOfBytesToWrite = strlen(buffs); //将要写入的数据长度
-						DWORD nBytesSent; //实际写入的数据长度
-						WriteFile(hComm, buffs, nNumberOfBytesToWrite, &nBytesSent, NULL);
-					}
-					////读串口数据
-					//char lpReadBuf[1024] = { 0 }; //接收缓冲区长度为1024，内容都为0
-					//DWORD nNumberOfBytesToRead = 1024; //最大读取1024个字节
-					//DWORD nBytesRead;
-					//ReadFile(hComm, lpReadBuf, nNumberOfBytesToRead, &nBytesRead, NULL);
-					//if (strlen(lpReadBuf) != 0)
-					//	printf("Read Data: %s \n", lpReadBuf);
+					//if (lhandstate == "Close")
+					//{
+					//	twist_msg.linear.x = -0.5;
+					//	twist_msg.linear.y = 0;
+					//	twist_msg.linear.z = 0;
+					//	twist_msg.angular.x = 0;
+					//	twist_msg.angular.y = 0;
+					//	twist_msg.angular.z = 0.2;
+					//	cout << "线速度为 " << twist_msg.linear.x << endl;
+					//}
+					//else if (rhandstate == "Close")
+					//{
+					//	twist_msg.linear.x = 0.5;
+					//	twist_msg.linear.y = 0;
+					//	twist_msg.linear.z = 0;
+					//	twist_msg.angular.x = 0;
+					//	twist_msg.angular.y = 0;
+					//	twist_msg.angular.z = 0;
+					//	cout << "线速度为 " << twist_msg.linear.x << endl;
+					//}
+					//else
+					//{
+					//	twist_msg.linear.x = 0;
+					//	twist_msg.linear.y = 0;
+					//	twist_msg.linear.z = 0;
+					//	twist_msg.angular.x = 0;
+					//	twist_msg.angular.y = 0;
+					//	twist_msg.angular.z = 0;
+					//	cout << "停止等待指令！" << endl;
+					//}
 				}
 				// 把骨骼ID赋值给面部ID
 				UINT64 trackingId = _UI64_MAX;
@@ -389,18 +356,17 @@ int main()
 			SafeRelease(faceframe);
 		}
 
-		//Mat show;
-		//cv::resize(colormuti, show, cv::Size(), 0.5, 0.5);
-		cv::imshow("ColorMuti", colormuti);
+		imshow("ColorMuti", colormuti);
+		imshow("BodyindexMuti", bodyindexmuti);
+		imshow("DepthMuti", depthmuti);
 
-		//imshow("BodyindexMuti", bodyindexmuti);
-
-		//imshow("DepthMuti", depthmuti);
-
-		if (cv::waitKey(34) == VK_ESCAPE)
+		if (waitKey(34) == VK_ESCAPE)
 		{
 			break;
 		}
+
+		//cmd_vel_pub.publish(&twist_msg);
+		//nh.spinOnce();
 	}
 
 	for (int i = 0; i < BODY_COUNT; i++)

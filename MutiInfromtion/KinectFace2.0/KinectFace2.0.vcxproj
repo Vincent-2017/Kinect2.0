@@ -46,6 +46,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\OpenLibs\ros_lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -66,12 +67,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="duration.cpp" />
+    <ClCompile Include="time.cpp" />
     <ClCompile Include="util.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="WindowsSocket.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ros.h" />
     <ClInclude Include="util.h" />
     <ClInclude Include="global.h" />
+    <ClInclude Include="WindowsSocket.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
