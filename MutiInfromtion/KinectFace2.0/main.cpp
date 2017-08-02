@@ -151,18 +151,18 @@ int main()
 	}
 
 	/********************************   ROS客户端  ********************************/
-	//ros::NodeHandle nh;
-	//char *ros_master = "192.168.137.5";
+	ros::NodeHandle nh;
+	char *ros_master = "192.168.137.5";
 
-	//printf("Connecting to server at %s\n", ros_master);
-	//nh.initNode(ros_master);
+	printf("Connecting to server at %s\n", ros_master);
+	nh.initNode(ros_master);
 
-	//printf("Advertising cmd_vel message\n");
-	//geometry_msgs::Twist twist_msg;
-	//ros::Publisher cmd_vel_pub("cmd_vel", &twist_msg);
-	//nh.advertise(cmd_vel_pub);
+	printf("Advertising cmd_vel message\n");
+	geometry_msgs::Twist twist_msg;
+	ros::Publisher cmd_vel_pub("cmd_vel", &twist_msg);
+	nh.advertise(cmd_vel_pub);
 
-	//printf("Go robot go!\n");
+	printf("Go robot go!\n");
 
 	while (1)
 	{
@@ -251,36 +251,36 @@ int main()
 					//	putText(colormuti, rightstr, Point(rightcolorpoint.x - 200, rightcolorpoint.y - 100), FONT_HERSHEY_SIMPLEX, 1.0f, Scalar(0, 0, 255, 255), 2, CV_AA);
 					//	//cout << leftdepth << "  " << rightdepth << endl;
 					//}
-					//if (lhandstate == "Close")
-					//{
-					//	twist_msg.linear.x = -0.5;
-					//	twist_msg.linear.y = 0;
-					//	twist_msg.linear.z = 0;
-					//	twist_msg.angular.x = 0;
-					//	twist_msg.angular.y = 0;
-					//	twist_msg.angular.z = 0.2;
-					//	cout << "线速度为 " << twist_msg.linear.x << endl;
-					//}
-					//else if (rhandstate == "Close")
-					//{
-					//	twist_msg.linear.x = 0.5;
-					//	twist_msg.linear.y = 0;
-					//	twist_msg.linear.z = 0;
-					//	twist_msg.angular.x = 0;
-					//	twist_msg.angular.y = 0;
-					//	twist_msg.angular.z = 0;
-					//	cout << "线速度为 " << twist_msg.linear.x << endl;
-					//}
-					//else
-					//{
-					//	twist_msg.linear.x = 0;
-					//	twist_msg.linear.y = 0;
-					//	twist_msg.linear.z = 0;
-					//	twist_msg.angular.x = 0;
-					//	twist_msg.angular.y = 0;
-					//	twist_msg.angular.z = 0;
-					//	cout << "停止等待指令！" << endl;
-					//}
+					if (lhandstate == "Close")
+					{
+						twist_msg.linear.x = -0.5;
+						twist_msg.linear.y = 0;
+						twist_msg.linear.z = 0;
+						twist_msg.angular.x = 0;
+						twist_msg.angular.y = 0;
+						twist_msg.angular.z = 0.2;
+						cout << "线速度为 " << twist_msg.linear.x << endl;
+					}
+					else if (rhandstate == "Close")
+					{
+						twist_msg.linear.x = 0.5;
+						twist_msg.linear.y = 0;
+						twist_msg.linear.z = 0;
+						twist_msg.angular.x = 0;
+						twist_msg.angular.y = 0;
+						twist_msg.angular.z = 0;
+						cout << "线速度为 " << twist_msg.linear.x << endl;
+					}
+					else
+					{
+						twist_msg.linear.x = 0;
+						twist_msg.linear.y = 0;
+						twist_msg.linear.z = 0;
+						twist_msg.angular.x = 0;
+						twist_msg.angular.y = 0;
+						twist_msg.angular.z = 0;
+						cout << "停止等待指令！" << endl;
+					}
 				}
 				// 把骨骼ID赋值给面部ID
 				UINT64 trackingId = _UI64_MAX;
@@ -357,16 +357,16 @@ int main()
 		}
 
 		imshow("ColorMuti", colormuti);
-		imshow("BodyindexMuti", bodyindexmuti);
-		imshow("DepthMuti", depthmuti);
+		//imshow("BodyindexMuti", bodyindexmuti);
+		//imshow("DepthMuti", depthmuti);
+
+		cmd_vel_pub.publish(&twist_msg);
+		nh.spinOnce();
 
 		if (waitKey(34) == VK_ESCAPE)
 		{
 			break;
 		}
-
-		//cmd_vel_pub.publish(&twist_msg);
-		//nh.spinOnce();
 	}
 
 	for (int i = 0; i < BODY_COUNT; i++)
